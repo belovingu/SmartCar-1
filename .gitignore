@@ -4,8 +4,6 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # IAR Settings 
-Project/IAR/
-
 **/settings/*.crun 
 **/settings/*.dbgdt 
 **/settings/*.cspy 
@@ -383,8 +381,24 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-Project/IAR/
+Project/IAR/*
 Project/IAR/program/nor_sdram_zf_dtcm/Obj/RT106X.pbd
 Project/IAR/program/nor_sdram_zf_dtcm/Obj/RT106X.pbd
 Project/IAR/program/nor_sdram_zf_dtcm/Obj/RT106X.pbd.browse
 Project/IAR/program/nor_sdram_zf_dtcm/Obj/RT106X.pbw
+Project/IAR/program/RT106X.dep
+Project/IAR/program/RT106X.ewp
+Project/IAR/program/RT106X.ewt
+Project/IAR/program/nor_sdram_zf_dtcm/Exe/RT106X.out
+Project/IAR/program/nor_sdram_zf_dtcm/Exe/RT106X.sim
+Project/IAR/program/nor_sdram_zf_dtcm/List/RT106X.log
+Project/IAR/program/nor_sdram_zf_dtcm/List/RT106X.map
+Project/IAR/program/nor_sdram_zf_dtcm/Obj/main.o
+Project/IAR/program/nor_sdram_zf_dtcm/Obj/main.pbi
+Project/IAR/program/nor_sdram_zf_dtcm/Obj/RT106X.pbd
+Project/IAR/program/nor_sdram_zf_dtcm/Obj/RT106X.pbd.browse
+Project/IAR/program/nor_sdram_zf_dtcm/Obj/RT106X.pbd.linf
+Project/IAR/program/nor_sdram_zf_dtcm/Obj/RT106X.pbw
+Project/IAR/program/nor_sdram_zf_dtcm/Obj/test.o
+Project/IAR/program/settings/RT106X.dnx
+Project/IAR/settings/RT106X.wsdt
