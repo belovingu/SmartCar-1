@@ -5,14 +5,10 @@
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
 
-#define KEY0_PIN D14
-#define KEY1_PIN D15
-#define KEY2_PIN D16
-
-static agile_btn_t *key0 = RT_NULL;
-static agile_btn_t *key1 = RT_NULL;
-static agile_btn_t *key2 = RT_NULL;
-extern rt_bool_t is_chassis_running;
+#define KEY1_PIN D12
+#define KEY2_PIN D15
+#define KEY3_PIN D14
+#define KEY4_PIN D17
 
 #define SWITCH_1 C31
 #define SWITCH_2 B9
@@ -21,6 +17,11 @@ extern rt_bool_t is_chassis_running;
 
 #define SWITCH_ON 0
 #define SWITCH_OFF 1
+
+static agile_btn_t *key0 = RT_NULL;
+static agile_btn_t *key1 = RT_NULL;
+static agile_btn_t *key2 = RT_NULL;
+extern rt_bool_t is_chassis_running;
 
 static void switch_init(void)
 {

@@ -3,6 +3,27 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# IAR Settings 
+Project/IAR/
+
+**/settings/*.crun 
+**/settings/*.dbgdt 
+**/settings/*.cspy 
+**/settings/*.cspy.* 
+**/settings/*.xcl 
+**/settings/*.dni 
+**/settings/*.wsdt 
+**/settings/*.wspos 
+
+# IAR Debug Exe 
+**/Exe/*.sim 
+
+# IAR Debug Obj 
+**/Obj/*.pbd 
+**/Obj/*.pbd.* 
+**/Obj/*.pbi 
+**/Obj/*.pbi.* 
+
 # User-specific files
 *.rsuser
 *.suo
@@ -361,3 +382,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+Project/IAR/
+Project/IAR/program/nor_sdram_zf_dtcm/Obj/RT106X.pbd
+Project/IAR/program/nor_sdram_zf_dtcm/Obj/RT106X.pbd
+Project/IAR/program/nor_sdram_zf_dtcm/Obj/RT106X.pbd.browse
+Project/IAR/program/nor_sdram_zf_dtcm/Obj/RT106X.pbw
