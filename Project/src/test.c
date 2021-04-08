@@ -24,10 +24,6 @@ int openctrl_motor(int argc, char **argv)
     motor_run(left_motor, motor_pwm);
     motor_run(right_motor, motor_pwm);
 
-    // rt_thread_mdelay(100);
-    // motor_run(left_motor, 0);
-    // motor_run(right_motor, 0);
-
     return RT_EOK;
 }
 
