@@ -199,7 +199,10 @@ int main(void)
         Least3Error();
         calculate_error();
         //steer ctrl
-        steer_kp_fix();
+        if (switch_get(1) == 0)
+        {
+            steer_kp_fix();
+        }
         controller_set_param(rho_err_pid, steer_kp, steer_ki, steer_kd);
         controller_update(rho_err_pid, steer_error);
         steer_out = rho_err_pid->output;

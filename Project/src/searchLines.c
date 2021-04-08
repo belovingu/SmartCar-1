@@ -18,6 +18,8 @@ toppoint与实际顶点差5行*/
 //自测的顶点行与实际距离的表格，具体要根据自己的车进行测量
 #include "searchLines.h"
 
+#define Image BinImage
+
 /*******十字标志，定义******/
 int16 shizi_time = 0; //十字计时器
 int16 shizi;          //十字计数器
@@ -51,6 +53,8 @@ int16 set_startline = 25;
 Findline1_TypeDef f1;
 Findline2_TypeDef f2;
 int16 column_start = 80; //基础寻线的每行的起始搜索列
+int shortstraight_flag = 0;
+
 int16 text_width[120] = {0};
 int16 width_real[120] = {0, 0, 0, 0, 1, 1, 0, 0, 0, 0, //赛道半宽 1 2行为推算值 ，具体要根据自己的车进行测量
                          0, 1, 1, 1, 1, 1, 2, 2, 2, 2,

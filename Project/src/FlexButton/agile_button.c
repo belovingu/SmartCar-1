@@ -23,7 +23,7 @@
 
 // agile_button 线程堆栈大小
 #ifndef PKG_AGILE_BUTTON_THREAD_STACK_SIZE
-#define PKG_AGILE_BUTTON_THREAD_STACK_SIZE 256
+#define PKG_AGILE_BUTTON_THREAD_STACK_SIZE 2048
 #endif
 
 // agile_button 线程优先级

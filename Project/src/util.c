@@ -217,15 +217,18 @@ void upload_zf_bin()
     uart_putchar(USART_1, 0xff);
     uart_putchar(USART_1, 0x01);
     uart_putchar(USART_1, 0x01);
-    for (int i = 0; i < img_width * img_height; i++)
+    for (int i = 0; i < img_height; i++)
     {
-        if (BinImage[i] == 0)
+        for (int j = 0; j < img_width; j++)
         {
-            uart_putchar(USART_1, 0xFF);
-        }
-        else
-        {
-            uart_putchar(USART_1, 0x00);
+            if (BinImage[i][j] != 0)
+            {
+                uart_putchar(USART_1, 0xFF);
+            }
+            else
+            {
+                uart_putchar(USART_1, 0x00);
+            }
         }
     }
 }
