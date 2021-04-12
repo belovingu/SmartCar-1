@@ -67,16 +67,24 @@ static void btn_click_event_cb(agile_btn_t *btn)
     switch (btn->pin)
     {
     case KEY1_PIN:
-        // is_chassis_running = !is_chassis_running;
+        is_chassis_running = !is_chassis_running;
         break;
     case KEY2_PIN:
         break;
     case KEY3_PIN:
-        upload_zf_gray();
-        break;
+        if (btn->repeat_cnt == 1)
+            upload_my_bin();
+        else if (btn->repeat_cnt == 2)
+            upload_my_gray();
+        else if (btn->repeat_cnt == 3)
+            break;
     case KEY4_PIN:
-        upload_zf_bin();
-        break;
+        if (btn->repeat_cnt == 1)
+            upload_zf_bin();
+        else if (btn->repeat_cnt == 2)
+            upload_zf_gray();
+        else if (btn->repeat_cnt == 3)
+            break;
     default:
         break;
     }

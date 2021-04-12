@@ -18,6 +18,9 @@ int limit_ab_int(int x, int a, int b);
 float limit_float(float x, float y);
 int limit_int(int x, int y);
 
+void upload_my_gray();
+void upload_my_bin();
+
 void upload_zf_gray();
 void upload_zf_bin();
 

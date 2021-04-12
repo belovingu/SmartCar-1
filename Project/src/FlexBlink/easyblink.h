@@ -22,20 +22,20 @@ extern "C"
 #endif
 
 /* 可以使用MSH控制台手动控制LED闪烁 */
-#define PKG_EASYBLINK_USING_MSH_CMD
+// #define PKG_EASYBLINK_USING_MSH_CMD
 /* 使用MUTEX互锁，线程安全，一般情况下不需要使用 */
-#define PKG_EASYBLINK_USING_MUTEX
+// #define PKG_EASYBLINK_USING_MUTEX
 /* 使用系统的动态堆来创建线程栈 */
 //#define PKG_EASYBLINK_USING_HEAP
 
 /* 可控制的最大LED数目 */
 #ifndef PKG_EASYBLINK_MAX_LED_NUMS
-#define PKG_EASYBLINK_MAX_LED_NUMS 3
+#define PKG_EASYBLINK_MAX_LED_NUMS 2
 #endif
 
 /* 线程栈相关配置 */
 #define PKG_EASYBLINK_THREAD_PRIORITY (RT_THREAD_PRIORITY_MAX - 2)
-#define PKG_EASYBLINK_THREAD_STACK_SIZE 256
+#define PKG_EASYBLINK_THREAD_STACK_SIZE 1024
 #define PKG_EASYBLINK_THREAD_TIMESLICE (RT_TICK_PER_SECOND / 100) /* 10ms */
 
 /* 若在中断中使用 easyblink，并开了互锁，请把宏 PKG_EASYBLINK_WAIT_MUTEX_TICK 设为 0 吧，

@@ -46,9 +46,9 @@ float steer_kd = 0;
 float steer_kp_max = 50;
 
 //speed ctrl
-float speed_drop_row_l;
-float speed_drop_row;
-float speed_set;
+//float speed_drop_row_l;
+//float speed_drop_row;
+//float speed_set;
 float speed_min = 1.0;
 float speed_max = 2.2; //m/s
 
@@ -62,70 +62,69 @@ float dym_speed_param3 = 0.0;
 float dym_speed_param4 = 0.01;
 
 //variables
-//static rt_tick_t disp_info_last_time;
 char steer_out_str[20];
 char steer_err_str[20];
 int csi_cam_exp_time = 50;
 
-float mid_line_weight[img_height] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //1-40
-
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, //41-60
-
-    1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3,
-    1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, //61-80
-
-    2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5,
-    2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, //81-100
-
-    2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //101-120
-};
-
-void calculate_error(void)
-{
-    float CenterSum = 0;
-    float WeightSum = 0;
-    float CenterMeanValue = 0;
-
-    for (int i = img_height - 1; i > road_end_pos; i--)
-    {
-        CenterSum += mid_line[i] * mid_line_weight[i];
-        WeightSum += mid_line_weight[i];
-    }
-
-    if (WeightSum != 0)
-    {
-        CenterMeanValue = (CenterSum / WeightSum);
-    }
-
-    steer_error_l = steer_error;
-    steer_error_ll = steer_error_l;
-    steer_error = (CenterMeanValue - img_width / 2);
-    steer_error = limit_float(steer_error, img_width / 2);
-}
-
-void steer_kp_fix()
-{
-    steer_kp = steer_basic_kp + (steer_error * steer_error) * steer_kp_j;
-    if (steer_kp >= steer_kp_max)
-        steer_kp = steer_kp_max;
-}
-
-void dym_speed_ctrl()
-{
-    speed_drop_row_l = speed_drop_row;
-    speed_drop_row = mid_line_end_pos;
-    speed_drop_row = limit_ab_float(speed_drop_row, 0.3 * img_height, 0.9 * img_height);
-    speed_set = dym_speed_param1 * speed_drop_row +
-                dym_speed_param2 * (speed_drop_row - speed_drop_row_l) -
-                (dym_speed_param3 * ABS(steer_error) + dym_speed_param4 * (steer_error - steer_error_l));
-    speed_set = limit_ab_float(speed_set, speed_min, speed_max);
-}
+//float mid_line_weight[img_height] = {
+//    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //1-40
+//
+//    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+//    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, //41-60
+//
+//    1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3,
+//    1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, //61-80
+//
+//    2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5,
+//    2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, //81-100
+//
+//    2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5,
+//    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //101-120
+//};
+//
+//void calculate_error(void)
+//{
+//    float CenterSum = 0;
+//    float WeightSum = 0;
+//    float CenterMeanValue = 0;
+//
+//    for (int i = img_height - 1; i > road_end_pos; i--)
+//    {
+//        CenterSum += mid_line[i] * mid_line_weight[i];
+//        WeightSum += mid_line_weight[i];
+//    }
+//
+//    if (WeightSum != 0)
+//    {
+//        CenterMeanValue = (CenterSum / WeightSum);
+//    }
+//
+//    steer_error_l = steer_error;
+//    steer_error_ll = steer_error_l;
+//    steer_error = (CenterMeanValue - img_width / 2);
+//    steer_error = limit_float(steer_error, img_width / 2);
+//}
+//
+//void steer_kp_fix()
+//{
+//    steer_kp = steer_basic_kp + (steer_error * steer_error) * steer_kp_j;
+//    if (steer_kp >= steer_kp_max)
+//        steer_kp = steer_kp_max;
+//}
+//
+//void dym_speed_ctrl()
+//{
+//    speed_drop_row_l = speed_drop_row;
+//    speed_drop_row = mid_line_end_pos;
+//    speed_drop_row = limit_ab_float(speed_drop_row, 0.3 * img_height, 0.9 * img_height);
+//    speed_set = dym_speed_param1 * speed_drop_row +
+//                dym_speed_param2 * (speed_drop_row - speed_drop_row_l) -
+//                (dym_speed_param3 * ABS(steer_error) + dym_speed_param4 * (steer_error - steer_error_l));
+//    speed_set = limit_ab_float(speed_set, speed_min, speed_max);
+//}
 
 void show_tft_img()
 {
@@ -141,22 +140,12 @@ void show_tft_img()
     {
         lcd_displayimage032(mt9v03x_csi_image[0], MT9V03X_CSI_W, MT9V03X_CSI_H);
     }
-    for (int i = 0; i < MT9V03X_CSI_H; i++)
+    for (int i = f2.toppoint; i < MT9V03X_CSI_H; i++)
     {
-        lcd_drawpoint(left_line[i], i, RED);
-        lcd_drawpoint(right_line[i], i, BLUE);
-        lcd_drawpoint(mid_line[i], i, GREEN);
+        lcd_drawpoint(f1.leftline[i], i, RED);
+        lcd_drawpoint(f1.midline[i], i, BLUE);
+        lcd_drawpoint(f1.rightline[i], i, GREEN);
     }
-
-    gui_circle(img_width / 2, img_height - mid_line_end_pos, RED, 2, 0);
-    gui_circle(img_width / 4, img_height - left_line_end_pos, RED, 2, 0);
-    gui_circle(img_width * 3 / 4, img_height - right_line_end_pos, RED, 2, 0);
-    gui_circle(img_width * 1 / 8, img_height - leftleft_line_end_pos, RED, 2, 0);
-    gui_circle(img_width * 3 / 8, img_height - midleft_line_end_pos, RED, 2, 0);
-    gui_circle(img_width * 5 / 8, img_height - midright_line_end_pos, RED, 2, 0);
-    gui_circle(img_width * 7 / 8, img_height - rightright_line_end_pos, RED, 2, 0);
-
-    lcd_drawline(0, road_end_pos, img_width, road_end_pos, YELLOW);
 }
 
 int main(void)
@@ -167,9 +156,9 @@ int main(void)
 
     errno_led = easyblink_init_led(LED1_PIN, PIN_LOW);
     easyblink(errno_led, -1, 500, 1000);
-
-    info_beep = easyblink_init_led(BEEP_PIN, PIN_HIGH);
-    easyblink(info_beep, 2, 100, 400);
+    //
+    //    info_beep = easyblink_init_led(BEEP_PIN, PIN_HIGH);
+    //    easyblink(info_beep, 2, 50, 200);
 
     lcd_init();
     lcd_showstr(0, 0, "Initializing...");
@@ -188,41 +177,44 @@ int main(void)
         rt_sem_take(csi_done_sem, RT_WAITING_FOREVER);
         //find track
         pit_start(PIT_CH0);
-        MeanFilter(mt9v03x_csi_image, FilterImage);
-        Convert2Binary(FilterImage, BinImage, 1);
-        ResetVarialble();
-        FindEdgeLine(BinImage);
-        FindMidLine(BinImage);
-        CrossRoadProcess(BinImage);
-        LoopRoadProcess();
+        gray_mean_filter(mt9v03x_csi_image, FilterImage);
+        gray_to_binary(FilterImage, BinImage, 1);
+        findline1();
+        findline2();
+        compute_error();
+        road_type_judge();
 
-        Least3Error();
-        calculate_error();
+        // ResetVarialble();
+        // FindEdgeLine(BinImage);
+        // FindMidLine(BinImage);
+        // CrossRoadProcess(BinImage);
+        // LoopRoadProcess();
+        // Least3Error();
+        // calculate_error();
         //steer ctrl
-        if (switch_get(1) == 0)
-        {
-            steer_kp_fix();
-        }
-        controller_set_param(rho_err_pid, steer_kp, steer_ki, steer_kd);
-        controller_update(rho_err_pid, steer_error);
-        steer_out = rho_err_pid->output;
-        servo1_set_angle((int)steer_out);
-        //dym speed
-        if (StopCarJudge(BinImage))
-        {
-            set_velocity(0);
-        }
-        else
-        {
-            dym_speed_ctrl();
-            set_velocity(speed_set);
-        }
-
+        // if (switch_get(1) == 0)
+        // {
+        //     steer_kp_fix();
+        // }
+        // controller_set_param(rho_err_pid, steer_kp, steer_ki, steer_kd);
+        // controller_update(rho_err_pid, steer_error);
+        // steer_out = rho_err_pid->output;
+        // servo1_set_angle((int)steer_out);
+        // //dym speed
+        // if (StopCarJudge(BinImage))
+        // {
+        //     set_velocity(0);
+        // }
+        // else
+        // {
+        //     dym_speed_ctrl();
+        //     set_velocity(speed_set);
+        // }
+        // if (is_steer_debug)
+        //     rt_kprintf("steer:%d,%.2f,%.2f,%.2f\r\n", use_time, steer_error, steer_out, speed_set);
         use_time = pit_get_ms(PIT_CH0);
         pit_close(PIT_CH0);
 
-        if (is_steer_debug)
-            rt_kprintf("steer:%d,%.2f,%.2f,%.2f\r\n", use_time, steer_error, steer_out, speed_set);
         show_tft_img();
     }
 }

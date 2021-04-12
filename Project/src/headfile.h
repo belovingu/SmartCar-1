@@ -84,7 +84,8 @@
 #include "imageProcess.h"
 #include "buttonThread.h"
 #include "chassisThread.h"
-#include "searchLines.h"
+#include "findLines.h"
+#include "distinguish.h"
 #include "easyblink.h"
 #include "agile_button.h"
 
@@ -94,5 +95,13 @@
 #include "controller.h"
 #include "pos_pid_controller.h"
 #include "inc_pid_controller.h"
+
+#define img_width MT9V03X_CSI_W
+#define img_height MT9V03X_CSI_H
+
+#define white_point 255
+#define black_point 0
+
+#define Image BinImage
 
 #endif

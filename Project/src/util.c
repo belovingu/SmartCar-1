@@ -138,64 +138,67 @@ void reboot(void)
 MSH_CMD_EXPORT(reboot, reset system);
 
 //my upload
-void upload_compbinimage()
-{
-    int i, j;
+// void upload_compbinimage()
+// {
+//     int i, j;
 
-    j = 0;
-    uint8 *p = BinImage[0];
-    uint8 *p2 = compressedImage;
+//     j = 0;
+//     uint8 *p = BinImage[0];
+//     uint8 *p2 = compressedImage;
 
-    for (i = 0; i < img_width * img_height; i++)
-    {
-        if (p[i] == white_point)
-        {
-            *p2 |= 0x01;
-        }
-        else
-        {
-            *p2 &= 0x00;
-        }
+//     for (i = 0; i < img_width * img_height; i++)
+//     {
+//         if (p[i] == white_point)
+//         {
+//             *p2 |= 0x01;
+//         }
+//         else
+//         {
+//             *p2 &= 0x00;
+//         }
 
-        (*p2) <<= 1;
-        j++;
-        if (j == 8)
-        {
-            j = 0;
-            p2++;
-        }
-    }
+//         (*p2) <<= 1;
+//         j++;
+//         if (j == 8)
+//         {
+//             j = 0;
+//             p2++;
+//         }
+//     }
 
-    uart_putchar(USART_1, 0x00);
-    uart_putchar(USART_1, 0xff);
-    uart_putchar(USART_1, 0x01);
-    uart_putchar(USART_1, 0x01);
-    for (i = 0; i < img_width * img_height / 8; i++)
-    {
-        uart_putchar(USART_1, p2[i]);
-    }
-}
-MSH_CMD_EXPORT(upload_compbinimage, upload_compbinimage);
+//     uart_putchar(USART_1, 0x00);
+//     uart_putchar(USART_1, 0xff);
+//     uart_putchar(USART_1, 0x01);
+//     uart_putchar(USART_1, 0x01);
+//     for (i = 0; i < img_width * img_height / 8; i++)
+//     {
+//         uart_putchar(USART_1, p2[i]);
+//     }
+// }
+// MSH_CMD_EXPORT(upload_compbinimage, upload_compbinimage);
 
-void upload_uncompbinimage()
+void upload_my_bin()
 {
     rt_kprintf("START");
-    for (int i = 0; i < img_width * img_height; i++)
+    for (int i = 0; i < img_height; i++)
     {
-        if (BinImage[i] == 0)
+        for (int j = 0; j < img_width; j++)
         {
-            uart_putchar(USART_1, 0xFF);
-        }
-        else
-        {
-            uart_putchar(USART_1, 0x00);
+            if (BinImage[i][j] != 0)
+            {
+                uart_putchar(USART_1, 0xFF);
+            }
+            else
+            {
+                uart_putchar(USART_1, 0x00);
+            }
         }
     }
     rt_kprintf("END\n");
 }
-MSH_CMD_EXPORT(upload_uncompbinimage, upload_uncompbinimage);
+MSH_CMD_EXPORT(upload_my_bin, upload_my_bin);
 
-void upload_grayimage()
+void upload_my_gray()
 {
     rt_kprintf("START");
     for (int i = 0; i < img_height; i++)
@@ -207,7 +210,7 @@ void upload_grayimage()
     }
     rt_kprintf("END\n");
 }
-MSH_CMD_EXPORT(upload_grayimage, upload_grayimage);
+MSH_CMD_EXPORT(upload_my_gray, upload_my_gray);
 
 //zf upload
 void upload_zf_bin()
