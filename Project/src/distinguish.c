@@ -1,27 +1,32 @@
-#include "findLines.h"
+
 #include "distinguish.h"
+#include "findLines.h"
+#include "chassisThread.h"
+#include "rtthread.h"
 
-int16 g_HighestSpeed = 0;
-int16 g_LowestSpeed = 0;
+extern ebled_t info_beep;
+
+int16 g_highest_speed = 0;
+int16 g_lowest_speed = 0;
 int16 speed_set = 0;
-int16 speed_now = 0;
-int16 s_zhi = 250;
-int16 s_max = 250;
-int16 s_wan1 = 230;
-int16 s_wan2 = 200;
-int16 s_cross = 230;
-int16 s_huan = 200;
+int16 speed_avg = 0;
 
-int16 error_ave = 0;
-int16 error_last = 0;
-int16 error_pre = 0;
+int16 s_zhi = 200;
+int16 s_max = 200;
+int16 s_wan1 = 170;
+int16 s_wan2 = 150;
+int16 s_cross = 200;
+int16 s_huan = 100;
+
 int16 fore_min = 55;
 int16 fore_max = 69;
-int16 foresight = 51;
+int16 foresight = 69;
+
 int16 mid_error[5];
-int16 error[30] = {0};
-int16 error_cha[4] = {0};
-int16 error_d = 0;
+int16 steer_error[30] = {0};
+int16 steer_error_ave = 0;
+int16 steer_error_l = 0;
+int16 steer_error_ll = 0;
 
 int16 stop_car[20] = {0};
 int16 stop_car_flag = 0;
@@ -52,7 +57,24 @@ int16 stdDeviation = 0;
 // 7为颠簸，
 // 8为障碍
 
-int16 tiaobian_cnt = 0;
+float mid_line_weight[img_height] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //1-40
+
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, //41-60
+
+    1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3,
+    1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, //61-80
+
+    2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5,
+    2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, //81-100
+
+    2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //101-120
+};
 
 float solve_midline_slope(void)
 {
@@ -85,19 +107,28 @@ void stop_car_judge()
             }
         }
     }
-    if (count_black > 200)
+    if (count_black > 150)
     {
-        stop_car_flag = 1;
+        stop_car[0] = 1;
     }
     else
     {
-        stop_car_flag = 0;
+        stop_car[0] = 0;
     }
 
-    stop_car[0] = stop_car_flag;
+    int stop_count = 0;
+    stop_car_flag = 0;
     for (int i = 20; i >= 1; i--)
     {
         stop_car[i] = stop_car[i - 1];
+        if (stop_car[i])
+        {
+            stop_count++;
+        }
+    }
+    if (stop_count >= 15)
+    {
+        stop_car_flag = 1;
     }
 }
 
@@ -163,72 +194,78 @@ void cross_straight_judge(void)
 
 void compute_error()
 {
-    // speed_now = (int16)(0.6 * MotorPID.Speed_test[0] + 0.2 * MotorPID.Speed_test[1] + 0.2 * MotorPID.Speed_test[2]); //编码器的值会有高频抖动
+    speed_avg = (int16)(0.6 * speed_now[0] + 0.2 * speed_now[1] + 0.2 * speed_now[2]);
+    // //编码器的值会有高频抖动
+    // //测得的实际速度,且滤波
 
-    // if (speed_now > 370)
+    // if (speed_avg > 370)
     // {
     //     foresight = fore_min;
     // }
 
-    // else if (speed_now < 250)
+    // else if (speed_avg < 250)
     // {
     //     foresight = fore_max;
     // }
     // else
     // {
-    //     foresight = (int16)(fore_min + (float)(fore_max - fore_min) * (380 - speed_now) * (380 - speed_now) / (120 * 120));
+    //     foresight = (int16)(fore_min + (float)(fore_max - fore_min) * (380 - speed_avg) * (380 - speed_avg) / (120 * 120));
     // }
-    foresight = 55;
-    foresight = foresight > 69 ? 69 : foresight;
 
-    mid_error[0] = 8 * (f1.midline[foresight] - 80);
-    mid_error[1] = 1 * (f1.midline[foresight + 1] - 80);
-    mid_error[2] = 1 * (f1.midline[foresight + 2] - 80);
-    error[0] = (int16)((mid_error[0] + mid_error[1] + mid_error[2]) / 10); //整数除法和单精度乘法的效率差不多
+    // foresight = limit_ab_int(foresight, fore_min, fore_max);
 
-    if (error[0] > 60)
-    { //error限幅 极限60
-        error[0] = 60;
-    }
-    if (error[0] < -60)
+    // mid_error[0] = 1 * (f1.midline[foresight] - 80);
+    // mid_error[1] = 1 * (f1.midline[foresight + 1] - 80);
+    // mid_error[2] = 1 * (f1.midline[foresight + 2] - 80);
+    // mid_error[3] = 1 * (f1.midline[foresight + 3] - 80);
+    // mid_error[4] = 1 * (f1.midline[foresight + 4] - 80);
+    // steer_error[0] = (int16)((mid_error[0] + mid_error[1] + mid_error[2] + mid_error[3] + mid_error[4]) / 5);
+    float CenterSum = 0;
+    float WeightSum = 0;
+    float CenterMeanValue = 0;
+    for (int i = 120 - 1; i > f2.toppoint; i--)
     {
-        error[0] = -60;
-    }
-    if (error[0] - error[1] > 15)
-    { //error变化限幅
-        error[0] = error[1] + 15;
-    }
-    if (error[0] - error[1] < -15)
-    {
-        error[0] = error[1] - 15;
+        CenterSum += f1.midline[i] * mid_line_weight[i];
+        WeightSum += mid_line_weight[i];
     }
 
-    error_cha[0] = error[0] - error[1];
-    if (error_cha[0] - error_cha[1] > 13)
-    { //error微分的变化限幅 理论ec0最大40 实际示波器返回不超15
-        error_cha[0] = error_cha[1] + 13;
-    }
-    if (error_cha[0] - error_cha[1] < -13)
+    if (WeightSum != 0)
     {
-        error_cha[0] = error_cha[1] - 13;
+        CenterMeanValue = (CenterSum / WeightSum);
     }
-    error_d = (int16)(0.8 * error_cha[1] + 0.2 * error_cha[0]); //2帧D
+    steer_error[0] = (CenterMeanValue - 80);
 
-    error_cha[3] = error_cha[2];
-    error_cha[2] = error_cha[1];
-    error_cha[1] = error_cha[0];
-    int i;
-    for (i = 29; i > 0; i--)
+    if (steer_error[0] > 80)
     {
-        error[i] = error[i - 1];
+        steer_error[0] = 80;
     }
+    if (steer_error[0] < -80)
+    {
+        steer_error[0] = -80;
+    }
+    if (steer_error[0] - steer_error[1] > 15)
+    {
+        steer_error[0] = steer_error[1] + 15;
+    }
+    if (steer_error[0] - steer_error[1] < -15)
+    {
+        steer_error[0] = steer_error[1] - 15;
+    }
+
+    for (int i = 29; i > 0; i--)
+    {
+        steer_error[i] = steer_error[i - 1];
+    }
+
+    steer_error_ave = steer_error[0];
+    // steer_error_ave = (int16)(0.6 * steer_error[0] + 0.2 * steer_error_l + 0.2 * steer_error_ll);
+    steer_error_ll = steer_error_l;
+    steer_error_l = steer_error_ave;
 }
 
-void road_type_judge()
+void velocity_set()
 {
-    error_ave = (int16)(0.6 * error[0] + 0.2 * error_last + 0.2 * error_pre);
-    error_pre = error_last;
-    error_last = error_ave;
+
     long_straight_flag = 0;
 
     if (f2.shiziflag[1] == 0)
@@ -237,23 +274,20 @@ void road_type_judge()
         short_straight_judge();
     }
 
-    /**********速度给定*************/
-    // #define LONG_STRAIGHT 1
-    // #define SHORT_STRAIGHT 2
-    // #define CURVE 3
-    // #define LOOP 4
-    // #define CROSS 5
-    // #define RAMP 6
-    // #define BUMPY 7
-    // #define OBSTACLE 8
     if (f2.huanleftflag != 0 || f2.huanrightflag != 0 || f2.huan == 1)
     {
         road_type[0] = LOOP;
+        if (road_type[1] != LOOP)
+            easyblink(info_beep, 1, 50, 100);
+
         speed_set = s_huan;
     }
     else if (f2.shiziflag[1] == 1)
     {
         road_type[0] = CROSS;
+        if (road_type[1] != CROSS)
+            easyblink(info_beep, 2, 50, 100);
+
         speed_set = s_cross;
     }
 
@@ -279,7 +313,7 @@ void road_type_judge()
         }
         else
         {
-            speed_set = (int16)(s_zhi - (s_zhi - s_wan1) * (abs(error_ave) / 35)); //偏差大于35给最低速度
+            speed_set = (int16)(s_zhi - (s_zhi - s_wan1) * (abs(steer_error_ave) / 35)); //偏差大于35给最低速度
             speed_set = speed_set < s_wan1 ? s_wan1 : speed_set;
         }
     }
@@ -293,17 +327,16 @@ void road_type_judge()
     {
         road_type[0] = CURVE;
         if (road_type[9] == 1 && road_type[10] == 1 && road_type[11] == 1 && road_type[12] == 1 && road_type[13] == 1)
-        { //前6帧是超长直道,先减猛一点
+        {
             speed_set = s_wan1 - 30;
         }
         else
         {
-            g_HighestSpeed = s_wan1;
-            g_LowestSpeed = s_wan2;
-            //动态给定最高速度和最低速度，尽量发挥直道的潜能
-            speed_set = g_HighestSpeed - (g_HighestSpeed - g_LowestSpeed) * (error_ave * error_ave) / (40 * 40); //偏差大于40给最低速度
-            speed_set = speed_set < g_LowestSpeed ? g_LowestSpeed : speed_set;
-            speed_set = speed_set > g_HighestSpeed ? g_HighestSpeed : speed_set; //最小s_wan2最大s_wan1
+            g_highest_speed = s_wan1;
+            g_lowest_speed = s_wan2;
+            speed_set = g_highest_speed - (g_highest_speed - g_lowest_speed) * (steer_error_ave * steer_error_ave) / (40 * 40); //偏差大于40给最低速度
+            speed_set = speed_set < g_lowest_speed ? g_lowest_speed : speed_set;
+            speed_set = speed_set > g_highest_speed ? g_highest_speed : speed_set; //最小s_wan2最大s_wan1
         }
     }
 
@@ -312,113 +345,17 @@ void road_type_judge()
         road_type[i] = road_type[i - 1];
     }
 }
-/**************************实现函数********************************************
-*函数原型:	  void sudu_set(void)
-*功　　能:	  获取速度模式	
-输入参数：        无
-输出参数：        无
-只有超直 直 坡道 十字判定
-*******************************************************************************/
-// void sudu_set(void)
-// {
-//     int16 i = 0;
-//     error_ave = (int16)(0.6 * error[0] + 0.2 * error_last + 0.2 * error_pre); //滤波
-//     error_pre = error_last;
-//     error_last = error_ave;
-//     super_zhidao = 0;
 
-//     if (f2.shiziflag[1] == 0)
-//     {
-//         long_straight_judge();
-//         short_straight_judge(); //直道判定
-//     }
+void dym_param_set_cmd(int argc, char **argv)
+{
+    s_zhi = atoi(argv[1]);
+    s_max = atoi(argv[2]);
+    s_wan1 = atoi(argv[3]);
+    s_wan2 = atoi(argv[4]);
+    s_cross = atoi(argv[5]);
+    s_huan = atoi(argv[6]);
 
-//     /**********速度给定*************/
-//     if (f2.huanleftflag != 0 || f2.huanrightflag != 0 || f2.huan == 1)
-//     {
-//         road_type[0] = 4;
-//         MotorPID.SpeedSet = s_huan;
-//     }
-//     else if (f2.shiziflag[1] == 1)
-//     {
-//         road_type[0] = 5;
-//         LedOff(1);
-//         LedOff(3);
-//         LedOff(2);
-//         LedOn(3);
-//         LedOn(2); //黄色
-
-//         MotorPID.SpeedSet = s_cross;
-//     }
-
-//     else if (super_zhidao == 1)
-//     {
-//         road_type[0] = 1;
-//         LedOff(1);
-//         LedOff(3);
-//         LedOff(2);
-//         LedOn(3); //绿色
-
-//         if (road_type[40] == 3 && road_type[41] == 3 && road_type[42] == 3 && road_type[43] == 3 && road_type[44] == 3)
-//             MotorPID.SpeedSet = s_max + 100; //出弯加速 未测试 可视情况注释
-//         else
-//             MotorPID.SpeedSet = s_max;
-//     }
-
-//     else if (shortstraight_flag != 0)
-//     {
-//         road_type[0] = 2;
-//         LedOff(1);
-//         LedOff(3);
-//         LedOff(2);
-//         LedOn(1); //蓝色
-
-//         if (road_type[6] == 1 && road_type[7] == 1 && road_type[8] == 1 && road_type[9] == 1 && road_type[10] == 1)
-//         { //前8帧是超长直道,先减猛一点
-//             MotorPID.SpeedSet = s_zhi - 70;
-//         }
-//         else if (road_type[3] == 3 && road_type[4] == 3 && road_type[5] == 3)
-//         { //前3帧是弯道 避免欧姆弯内加速
-//             MotorPID.SpeedSet = s_wan1;
-//         }
-//         else
-//         {
-//             MotorPID.SpeedSet = (int16)(s_zhi - (s_zhi - s_wan1) * (abs(error_ave) / 35)); //偏差大于35给最低速度
-//             MotorPID.SpeedSet = MotorPID.SpeedSet < s_wan1 ? s_wan1 : MotorPID.SpeedSet;
-//         }
-//     }
-
-//     else if (f2.huanleftflag != 0 || f2.huanrightflag != 0 || f2.huan == 1)
-//     {
-//         road_type[0] = 5;
-//         MotorPID.SpeedSet = s_huan;
-//     }
-//     else
-//     {
-//         road_type[0] = 3;
-//         LedOff(1);
-//         LedOff(3);
-//         LedOff(2);
-//         LedOn(1);
-//         LedOn(3); //蓝绿色
-
-//         if (road_type[9] == 1 && road_type[10] == 1 && road_type[11] == 1 && road_type[12] == 1 && road_type[13] == 1)
-//         { //前6帧是超长直道,先减猛一点
-//             MotorPID.SpeedSet = s_wan1 - 30;
-//         }
-//         else
-//         {
-//             g_HighestSpeed = s_wan1;
-//             g_LowestSpeed = s_wan2;
-//             //动态给定最高速度和最低速度，尽量发挥直道的潜能
-//             MotorPID.SpeedSet = g_HighestSpeed - (g_HighestSpeed - g_LowestSpeed) * (error_ave * error_ave) / (40 * 40); //偏差大于40给最低速度
-//             MotorPID.SpeedSet = MotorPID.SpeedSet < g_LowestSpeed ? g_LowestSpeed : MotorPID.SpeedSet;
-//             MotorPID.SpeedSet = MotorPID.SpeedSet > g_HighestSpeed ? g_HighestSpeed : MotorPID.SpeedSet; //最小s_wan2最大s_wan1
-//         }
-//     }
-
-//     for (i = 200; i >= 1; i--)
-//     {
-//         road_type[i] = road_type[i - 1];
-//     }
-// }
+    fore_min = atoi(argv[7]);
+    fore_max = atoi(argv[8]);
+}
+MSH_CMD_EXPORT(dym_param_set_cmd, dym_param_set_cmd);

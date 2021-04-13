@@ -1,4 +1,3 @@
-#include "headfile.h"
 #include "imageProcess.h"
 #include "util.h"
 #include "math.h"
@@ -56,11 +55,11 @@ void gray_to_binary(const uint8_t img[img_height][img_width],
 
     if (mode)
     {
-        ImageThreshold = LQMeanThreshold(img);
+        ImageThreshold = mean_threshold(img);
     }
     else
     {
-        ImageThreshold = GetOSTUThreshold(img); //大津法阈值Threshold = (uint8_t)(Threshold * 0.5) + 70;
+        ImageThreshold = ostu_threshold(img); //大津法阈值Threshold = (uint8_t)(Threshold * 0.5) + 70;
     }
 
     for (i = 0; i < img_height; i++)
@@ -75,7 +74,66 @@ void gray_to_binary(const uint8_t img[img_height][img_width],
     }
 }
 
-int LQMeanThreshold(const uint8_t img[img_height][img_width])
+void gray_sobel_filter(const uint8_t imageIn[img_height][img_width],
+                       uint8_t imageOut[img_height][img_width],
+                       uint8_t Threshold)
+{
+    /** 卷积核大小 */
+    short KERNEL_SIZE = 3;
+    short xStart = KERNEL_SIZE / 2;
+    short xEnd = img_width - KERNEL_SIZE / 2;
+    short yStart = KERNEL_SIZE / 2;
+    short yEnd = img_height - KERNEL_SIZE / 2;
+    short i, j, k;
+    short temp[4];
+    for (i = yStart; i < yEnd; i++)
+    {
+        for (j = xStart; j < xEnd; j++)
+        {
+            /* 计算不同方向梯度幅值  */
+            temp[0] = -(short)imageIn[i - 1][j - 1] + (short)imageIn[i - 1][j + 1]   //{{-1, 0, 1},
+                      - (short)imageIn[i][j - 1] + (short)imageIn[i][j + 1]          // {-1, 0, 1},
+                      - (short)imageIn[i + 1][j - 1] + (short)imageIn[i + 1][j + 1]; // {-1, 0, 1}};
+
+            temp[1] = -(short)imageIn[i - 1][j - 1] + (short)imageIn[i + 1][j - 1]   //{{-1, -1, -1},
+                      - (short)imageIn[i - 1][j] + (short)imageIn[i + 1][j]          // { 0,  0,  0},
+                      - (short)imageIn[i - 1][j + 1] + (short)imageIn[i + 1][j + 1]; // { 1,  1,  1}};
+
+            temp[2] = -(short)imageIn[i - 1][j] + (short)imageIn[i][j - 1]           //  0, -1, -1
+                      - (short)imageIn[i][j + 1] + (short)imageIn[i + 1][j]          //  1,  0, -1
+                      - (short)imageIn[i - 1][j + 1] + (short)imageIn[i + 1][j - 1]; //  1,  1,  0
+
+            temp[3] = -(short)imageIn[i - 1][j] + (short)imageIn[i][j + 1]           // -1, -1,  0
+                      - (short)imageIn[i][j - 1] + (short)imageIn[i + 1][j]          // -1,  0,  1
+                      - (short)imageIn[i - 1][j - 1] + (short)imageIn[i + 1][j + 1]; //  0,  1,  1
+
+            temp[0] = abs(temp[0]);
+            temp[1] = abs(temp[1]);
+            temp[2] = abs(temp[2]);
+            temp[3] = abs(temp[3]);
+
+            /* 找出梯度幅值最大值  */
+            for (k = 1; k < 4; k++)
+            {
+                if (temp[0] < temp[k])
+                {
+                    temp[0] = temp[k];
+                }
+            }
+
+            if (temp[0] > Threshold)
+            {
+                imageOut[i][j] = 1;
+            }
+            else
+            {
+                imageOut[i][j] = 0;
+            }
+        }
+    }
+}
+
+int mean_threshold(const uint8_t img[img_height][img_width])
 {
     int i = 0, j = 0;
     uint32_t tv = 0;
@@ -93,7 +151,7 @@ int LQMeanThreshold(const uint8_t img[img_height][img_width])
     return threshold;
 }
 
-int GetOSTUThreshold(const uint8_t img[img_height][img_width])
+int ostu_threshold(const uint8_t img[img_height][img_width])
 {
     int16_t i, j;
     uint32_t Amount = 0;
@@ -155,63 +213,4 @@ int GetOSTUThreshold(const uint8_t img[img_height][img_width])
         }
     }
     return Threshold; //返回最佳阈值;
-}
-
-void LQSobelFilter(const uint8_t imageIn[img_height][img_width],
-                   uint8_t imageOut[img_height][img_width],
-                   uint8_t Threshold)
-{
-    /** 卷积核大小 */
-    short KERNEL_SIZE = 3;
-    short xStart = KERNEL_SIZE / 2;
-    short xEnd = img_width - KERNEL_SIZE / 2;
-    short yStart = KERNEL_SIZE / 2;
-    short yEnd = img_height - KERNEL_SIZE / 2;
-    short i, j, k;
-    short temp[4];
-    for (i = yStart; i < yEnd; i++)
-    {
-        for (j = xStart; j < xEnd; j++)
-        {
-            /* 计算不同方向梯度幅值  */
-            temp[0] = -(short)imageIn[i - 1][j - 1] + (short)imageIn[i - 1][j + 1]   //{{-1, 0, 1},
-                      - (short)imageIn[i][j - 1] + (short)imageIn[i][j + 1]          // {-1, 0, 1},
-                      - (short)imageIn[i + 1][j - 1] + (short)imageIn[i + 1][j + 1]; // {-1, 0, 1}};
-
-            temp[1] = -(short)imageIn[i - 1][j - 1] + (short)imageIn[i + 1][j - 1]   //{{-1, -1, -1},
-                      - (short)imageIn[i - 1][j] + (short)imageIn[i + 1][j]          // { 0,  0,  0},
-                      - (short)imageIn[i - 1][j + 1] + (short)imageIn[i + 1][j + 1]; // { 1,  1,  1}};
-
-            temp[2] = -(short)imageIn[i - 1][j] + (short)imageIn[i][j - 1]           //  0, -1, -1
-                      - (short)imageIn[i][j + 1] + (short)imageIn[i + 1][j]          //  1,  0, -1
-                      - (short)imageIn[i - 1][j + 1] + (short)imageIn[i + 1][j - 1]; //  1,  1,  0
-
-            temp[3] = -(short)imageIn[i - 1][j] + (short)imageIn[i][j + 1]           // -1, -1,  0
-                      - (short)imageIn[i][j - 1] + (short)imageIn[i + 1][j]          // -1,  0,  1
-                      - (short)imageIn[i - 1][j - 1] + (short)imageIn[i + 1][j + 1]; //  0,  1,  1
-
-            temp[0] = abs(temp[0]);
-            temp[1] = abs(temp[1]);
-            temp[2] = abs(temp[2]);
-            temp[3] = abs(temp[3]);
-
-            /* 找出梯度幅值最大值  */
-            for (k = 1; k < 4; k++)
-            {
-                if (temp[0] < temp[k])
-                {
-                    temp[0] = temp[k];
-                }
-            }
-
-            if (temp[0] > Threshold)
-            {
-                imageOut[i][j] = 1;
-            }
-            else
-            {
-                imageOut[i][j] = 0;
-            }
-        }
-    }
 }

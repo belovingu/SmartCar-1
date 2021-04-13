@@ -1,6 +1,6 @@
 #ifndef __SERVO_H__
 #define __SERVO_H__
-#include "headfile.h"
+#include "common.h"
 
 #define SERVO1_PIN PWM4_MODULE2_CHA_C30 //定义车模寻迹舵机引脚
 #define SERVO2_PIN PWM1_MODULE0_CHA_D12 //定义云台舵机1引脚
@@ -16,8 +16,8 @@
 #define SERVO3_HALF_ONE 80 // 770-80, 770, 770+80
 
 void servo_init(void);
-rt_err_t servo1_set_angle(int angle);
-rt_err_t servo2_set_angle(int angle);
-rt_err_t servo3_set_angle(int angle);
+void servo1_set_angle(int angle);
+void servo2_set_angle(int angle);
+void servo3_set_angle(int angle);
 
 #endif //  __SERVO_H__

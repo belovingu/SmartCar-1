@@ -34,6 +34,7 @@
 #define _SEEKFREE_MT9V03X_CSI_h
 
 #include "common.h"
+#include "rtthread.h"
 #include "zf_uart.h"
 
 extern rt_sem_t csi_done_sem;

@@ -1,10 +1,6 @@
 #include "headfile.h"
 #include <encoder.h>
 
-#define DBG_SECTION_NAME "encoder"
-#define DBG_LEVEL DBG_LOG
-#include <rtdbg.h>
-
 #define ENCODER1_QTIMER QTIMER_1
 #define ENCODER1_A QTIMER1_TIMER0_C0
 #define ENCODER1_B QTIMER1_TIMER1_C1
@@ -51,7 +47,7 @@ float encoder_measure_rpm(encoder_t enc)
 
     if (rt_tick_get() - enc->last_time < rt_tick_from_millisecond(enc->sample_time))
     {
-        LOG_W("waiting for encoder sample time");
+        rt_kprintf("waiting for encoder sample time\n");
         return RT_EOK;
     }
 

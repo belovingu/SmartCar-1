@@ -81,13 +81,13 @@
 #include "util.h"
 #include "servo.h"
 #include "gpio_port.h"
-#include "imageProcess.h"
-#include "buttonThread.h"
-#include "chassisThread.h"
-#include "findLines.h"
-#include "distinguish.h"
 #include "easyblink.h"
 #include "agile_button.h"
+// #include "imageProcess.h"
+// #include "buttonThread.h"
+// #include "chassisThread.h"
+// #include "findLines.h"
+// #include "distinguish.h"
 
 #include "motor.h"
 #include "wheel.h"
@@ -103,5 +103,7 @@
 #define black_point 0
 
 #define Image BinImage
+extern ebled_t errno_led;
+extern ebled_t info_beep;
 
 #endif

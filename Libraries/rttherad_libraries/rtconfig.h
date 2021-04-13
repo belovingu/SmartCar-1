@@ -17,7 +17,7 @@
 #define RT_IDLE_HOOK_LIST_SIZE 4
 #define IDLE_THREAD_STACK_SIZE 256
 #define RT_DEBUG
-#define RT_DEBUG_COLOR
+// #define RT_DEBUG_COLOR
 
 /* Inter-Thread communication */
 
@@ -46,7 +46,7 @@
 
 #define RT_USING_COMPONENTS_INIT
 #define RT_USING_USER_MAIN
-#define RT_MAIN_THREAD_STACK_SIZE 4096
+#define RT_MAIN_THREAD_STACK_SIZE 4096 * 2
 #define RT_MAIN_THREAD_PRIORITY 10
 
 /* C++ features */
@@ -104,6 +104,7 @@
 #define ULOG_OUTPUT_LVL 7
 #define ULOG_ASSERT_ENABLE
 #define ULOG_LINE_BUF_SIZE 128
+#define ULOG_USING_ISR_LOG
 
 /* log format */
 

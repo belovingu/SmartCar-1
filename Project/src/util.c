@@ -1,5 +1,5 @@
 #include "headfile.h"
-
+#include "imageProcess.h"
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -93,6 +93,16 @@ double myatof(const char *str)
     return s * (falg ? -1.0 : 1.0);
 }
 
+int limit_loop(int x, int a, int b)
+{
+    int i = 0;
+    i = x + 1;
+    if (i > b)
+        i = i % (b - a + 1);
+
+    return i;
+}
+
 int limit_int(int x, int y)
 {
     if (x > y)
@@ -136,46 +146,6 @@ void reboot(void)
     NVIC_SystemReset();
 }
 MSH_CMD_EXPORT(reboot, reset system);
-
-//my upload
-// void upload_compbinimage()
-// {
-//     int i, j;
-
-//     j = 0;
-//     uint8 *p = BinImage[0];
-//     uint8 *p2 = compressedImage;
-
-//     for (i = 0; i < img_width * img_height; i++)
-//     {
-//         if (p[i] == white_point)
-//         {
-//             *p2 |= 0x01;
-//         }
-//         else
-//         {
-//             *p2 &= 0x00;
-//         }
-
-//         (*p2) <<= 1;
-//         j++;
-//         if (j == 8)
-//         {
-//             j = 0;
-//             p2++;
-//         }
-//     }
-
-//     uart_putchar(USART_1, 0x00);
-//     uart_putchar(USART_1, 0xff);
-//     uart_putchar(USART_1, 0x01);
-//     uart_putchar(USART_1, 0x01);
-//     for (i = 0; i < img_width * img_height / 8; i++)
-//     {
-//         uart_putchar(USART_1, p2[i]);
-//     }
-// }
-// MSH_CMD_EXPORT(upload_compbinimage, upload_compbinimage);
 
 void upload_my_bin()
 {
@@ -253,3 +223,14 @@ void upload_zf_gray()
     }
 }
 MSH_CMD_EXPORT(upload_zf_gray, upload_zf_gray);
+
+#include "findLines.h"
+void test_road_width()
+{
+    for (int i = 0; i < 120; i++)
+    {
+        int w = f1.rightline[i] - f1.leftline[i];
+        rt_kprintf("%d,", w / 2);
+    }
+}
+MSH_CMD_EXPORT(test_road_width, test_road_width);

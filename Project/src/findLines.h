@@ -1,6 +1,9 @@
 #ifndef _Findline_H_
 #define _Findline_H_
-#include "headfile.h"
+#include "common.h"
+#include "imageProcess.h"
+
+#define Image BinImage
 
 typedef struct
 {
@@ -53,7 +56,7 @@ typedef struct
 extern Findline2_TypeDef f2;
 
 extern int16 width[120];
-extern int16 width_real[120];
+extern int16 half_width[120];
 extern int16 text_width[120];
 extern int16 column_start;
 

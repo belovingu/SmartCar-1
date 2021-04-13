@@ -44,7 +44,6 @@ int openctrl_encoder()
         rt_kprintf("left: %d,right: %d\r\n", a, b);
         rt_thread_mdelay(50);
     }
-    return RT_EOK;
 }
 
 MSH_CMD_EXPORT(openctrl_encoder, openctrl_encoder);

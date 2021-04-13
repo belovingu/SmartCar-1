@@ -1,27 +1,16 @@
-#include "headfile.h"
+#include "common.h"
+#include "util.h"
+#include "buttonThread.h"
 #include <agile_button.h>
 
 #define DBG_SECTION_NAME "btn"
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
 
-#define KEY1_PIN D12
-#define KEY2_PIN D15
-#define KEY3_PIN D14
-#define KEY4_PIN D17
-
 // #define SWITCH_1 C31
 // #define SWITCH_2 B9
 // #define SWITCH_3 B10
 // #define SWITCH_4 B11
-
-#define SWITCH_4 C31
-#define SWITCH_3 B9
-#define SWITCH_2 B10
-#define SWITCH_1 B11
-
-#define SWITCH_ON 0
-#define SWITCH_OFF 1
 
 static agile_btn_t *key1 = RT_NULL;
 static agile_btn_t *key2 = RT_NULL;
@@ -29,6 +18,7 @@ static agile_btn_t *key3 = RT_NULL;
 static agile_btn_t *key4 = RT_NULL;
 
 extern rt_bool_t is_chassis_running;
+extern uint8_t disp_pic_type;
 
 int switch_init(void)
 {
@@ -45,16 +35,16 @@ int switch_get(int num)
     switch (num)
     {
     case 1:
-        return !gpio_get(SWITCH_1);
+        return gpio_get(SWITCH_1);
         break;
     case 2:
-        return !gpio_get(SWITCH_3);
+        return gpio_get(SWITCH_2);
         break;
     case 3:
-        return !gpio_get(SWITCH_3);
+        return gpio_get(SWITCH_3);
         break;
     case 4:
-        return !gpio_get(SWITCH_4);
+        return gpio_get(SWITCH_4);
         break;
     }
     return RT_ERROR;
@@ -70,6 +60,7 @@ static void btn_click_event_cb(agile_btn_t *btn)
         is_chassis_running = !is_chassis_running;
         break;
     case KEY2_PIN:
+        disp_pic_type = limit_loop(disp_pic_type, 0, 2);
         break;
     case KEY3_PIN:
         if (btn->repeat_cnt == 1)

@@ -31,7 +31,7 @@ static rt_err_t pos_pid_controller_update(void *pid, float current_point)
 
     // if ((rt_tick_get() - pos_pid->last_time) < rt_tick_from_millisecond(pos_pid->controller.sample_time))
     // {
-    //     LOG_D("PID waiting ... ");
+    //     LOG_D("pos PID waiting ... ");
     //     return RT_EBUSY;
     // }
     pos_pid->last_time = rt_tick_get();

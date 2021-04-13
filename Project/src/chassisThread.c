@@ -8,23 +8,18 @@
 
 #include "util.h"
 #include "chassisThread.h"
-
-#define DBG_TAG "car"
-#define DBG_LVL DBG_LOG
-#include <rtdbg.h>
+#include "buttonThread.h"
 
 wheel_t left_wheel = RT_NULL;
 wheel_t right_wheel = RT_NULL;
 rt_bool_t is_chassis_debug = RT_FALSE;
 rt_bool_t is_chassis_running = RT_TRUE;
 
-float left_target_rpm = 0, right_target_rpm = 0;
-float current_velocity = 0, last_velocity = 0;
-float wheel_kp = 0.6, wheel_ki = 0.2, wheel_kd = 0;
-float wheel_diff_p = 0.002; //80*1
-
-extern float steer_error;
-extern rt_mutex_t chassis_dmutex;
+float wheel_kp = 0.4;
+float wheel_ki = 0.1;
+float wheel_kd = 0;
+float wheel_diff_p = 0.2;
+float speed_now[5] = {0};
 
 void chassis_thread(void *parameter)
 {
@@ -33,18 +28,18 @@ void chassis_thread(void *parameter)
     motor_t right_motor = motor_create(2);
 
     // 1.2 Create two encoders
-    encoder_t left_encoder = encoder_create(1, WHEEL_SAMPLE_TIME);
-    encoder_t right_encoder = encoder_create(2, WHEEL_SAMPLE_TIME);
+    encoder_t left_encoder = encoder_create(1, 30);
+    encoder_t right_encoder = encoder_create(2, 30);
 
     // 1.3 Create two pid contollers
     inc_pid_controller_t left_pid = inc_pid_controller_create(wheel_kp, wheel_ki, wheel_kd,
                                                               WHEEL_PID_MAX_OUT,
                                                               -WHEEL_PID_MAX_OUT,
-                                                              WHEEL_SAMPLE_TIME);
+                                                              30);
     inc_pid_controller_t right_pid = inc_pid_controller_create(wheel_kp, wheel_ki, wheel_kd,
                                                                WHEEL_PID_MAX_OUT,
                                                                -WHEEL_PID_MAX_OUT,
-                                                               WHEEL_SAMPLE_TIME);
+                                                               30);
 
     // 1.4 Add two wheels
     left_wheel = wheel_create((motor_t)left_motor,
@@ -59,17 +54,20 @@ void chassis_thread(void *parameter)
     rt_thread_mdelay(100);
     while (1)
     {
-        if (is_chassis_running)
+        if (SWITCH_ON == switch_get(2))
         {
-            rt_mutex_take(chassis_dmutex, RT_WAITING_FOREVER);
             wheel_update(left_wheel);
             wheel_update(right_wheel);
-            rt_mutex_release(chassis_dmutex);
         }
         else
         {
             motor_run(left_wheel->w_motor, 0);
             motor_run(right_wheel->w_motor, 0);
+        }
+
+        for (int i = 0; i < 5; i++)
+        {
+            speed_now[i] = (left_wheel->speed_now[i] + right_wheel->speed_now[i]) / 2;
         }
 
         if (is_chassis_debug)
@@ -78,11 +76,12 @@ void chassis_thread(void *parameter)
                        (int)left_wheel->rpm, (int)left_wheel->w_controller->output,
                        (int)right_wheel->rpm, (int)right_wheel->w_controller->output);
         }
-        rt_thread_mdelay(WHEEL_SAMPLE_TIME);
+        rt_thread_mdelay(50);
     }
 }
 
-int set_velocity(float velocity)
+//paramset
+int set_velocity(float velocity, int steer_error)
 {
     if (left_wheel == RT_NULL || right_wheel == RT_NULL)
     {
@@ -90,15 +89,8 @@ int set_velocity(float velocity)
     }
 
     float left_speed = 0, right_speed = 0, computed = 0;
-    rt_mutex_take(chassis_dmutex, RT_WAITING_FOREVER);
-    if (ABS(steer_error) > 200)
-    {
-        computed = wheel_diff_p * steer_error * velocity;
-    }
-    else
-    {
-        computed = 0;
-    }
+
+    computed = ABS(steer_error) > 10 ? wheel_diff_p * steer_error * velocity : 0;
 
     left_speed = velocity + computed;
     right_speed = velocity - computed;
@@ -106,7 +98,6 @@ int set_velocity(float velocity)
     wheel_set_speed(left_wheel, left_speed);
     wheel_set_speed(right_wheel, right_speed);
 
-    rt_mutex_release(chassis_dmutex);
     return RT_EOK;
 }
 
@@ -116,13 +107,12 @@ int set_chassis_pid_param(float kp, float ki, float kd)
     {
         return RT_ERROR;
     }
-    rt_mutex_take(chassis_dmutex, RT_WAITING_FOREVER);
     controller_set_param(left_wheel->w_controller, kp, ki, kd);
     controller_set_param(right_wheel->w_controller, kp, ki, kd);
-    rt_mutex_release(chassis_dmutex);
     return RT_EOK;
 }
 
+//cmd
 int set_chassis_debug_cmd(int argc, char **argv)
 {
     if (argc == 1)
@@ -137,6 +127,11 @@ MSH_CMD_EXPORT(set_chassis_debug_cmd, set_chassis_debug_cmd 0 or 1);
 
 int chassis_thread_init_cmd()
 {
+    // rt_timer_t timer = rt_timer_create("chassis_timer", chassis_thread, RT_NULL, 50, RT_TIMER_FLAG_PERIODIC);
+    // if (RT_NULL != timer)
+    // {
+    //     rt_timer_start(timer);
+    // }
     rt_thread_t tid_chassis = rt_thread_create("chassis_thread",
                                                chassis_thread, RT_NULL,
                                                2048, 30, 5);
@@ -165,10 +160,10 @@ int set_velocity_cmd(int argc, char **argv)
     {
         return RT_ERROR;
     }
-    set_velocity(myatof(argv[1]));
+    set_velocity(myatof(argv[1]), 0);
     return RT_EOK;
 }
-MSH_CMD_EXPORT(set_velocity_cmd, set_velocity 0.5(m / s));
+MSH_CMD_EXPORT(set_velocity_cmd, set_velocity 500(cm / s));
 
 int set_chassis_enable_cmd(int argc, char **argv)
 {
@@ -176,7 +171,7 @@ int set_chassis_enable_cmd(int argc, char **argv)
     {
         return RT_ERROR;
     }
-    is_chassis_running = myatof(argv[1]);
+    is_chassis_running = str2bool(argv[1]);
     return RT_EOK;
 }
 MSH_CMD_EXPORT(set_chassis_enable_cmd, set_chassis_enable_cmd 0 or 1);

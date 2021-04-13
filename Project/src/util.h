@@ -1,6 +1,6 @@
 #ifndef __UTIL
 #define __UTIL
-#include "headfile.h"
+#include "common.h"
 
 //0: csharp
 //1: vofa
@@ -11,6 +11,7 @@ extern uint8_t debug_protocol;
 
 int str2bool(char *str);
 double myatof(const char *str);
+int limit_loop(int x, int a, int b);
 
 float limit_ab_float(float x, float a, float b);
 int limit_ab_int(int x, int a, int b);

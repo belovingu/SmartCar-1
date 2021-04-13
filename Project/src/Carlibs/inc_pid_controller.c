@@ -28,12 +28,11 @@ static rt_err_t inc_pid_controller_set_param(void *pid, float kp, float ki, floa
 static rt_err_t inc_pid_controller_update(void *pid, float current_point)
 {
     inc_pid_controller_t inc_pid = (inc_pid_controller_t)pid;
-    // TODO
-    if ((rt_tick_get() - inc_pid->last_time) < rt_tick_from_millisecond(inc_pid->controller.sample_time))
-    {
-        LOG_D("PID waiting ... ");
-        return RT_EBUSY;
-    }
+    // if ((rt_tick_get() - inc_pid->last_time) < rt_tick_from_millisecond(inc_pid->controller.sample_time))
+    // {
+    //     LOG_D("inc PID waiting ... ");
+    //     return RT_EBUSY;
+    // }
     inc_pid->last_time = rt_tick_get();
 
     inc_pid->error = inc_pid->controller.target - current_point;

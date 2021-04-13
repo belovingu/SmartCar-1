@@ -205,3 +205,4 @@ int test_file(void)
     {
     }
 }
+MSH_CMD_EXPORT(test_file, test_file);
